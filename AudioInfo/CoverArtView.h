@@ -7,7 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ASIHTTPRequest.h"
 
-@interface CoverArtView : UIView
+@interface CoverArtView : UIView <ASIHTTPRequestDelegate> {
+    UIImageView* imageView_;
 
+}
+- (void) getCoverArtForArtist:(NSString*)artist album:(NSString*)album;
 @end

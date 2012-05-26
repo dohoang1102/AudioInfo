@@ -7,7 +7,13 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ASIHTTPRequest.h"
 
-@interface LyricsView : UIView
+@interface LyricsView : UIView <ASIHTTPRequestDelegate> {
+    UITextView* lyricsView_;
+}
+
+- (void) getLyricsForArtist:(NSString*)artist song:(NSString*)song;
+
 
 @end

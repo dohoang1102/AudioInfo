@@ -7,90 +7,11 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+//Nifty defines:
+#define ABS(a)  (((a) < 0) ? -(a) : (a))
+
 // For curl_easy_escape()
-#include <curl/curl.h>
-
 #include "stringop.h"
-#include "types.h"
-
-// Implementation of the Levenshtein distance algorithm
-// Compare the number of edits needed to convert string $s
-// to target string $t
-// This is used to correct typos in e.g: lyricswiki
-// If you're a member of lyricswiki:
-// STOP MAKING TYPOS! IT TOOK ME OVER AN HOUR TO WRITE THIS! :-P
-// (not meant to be serious, you guys are cool ;-))
-// For instructions go to http://www.merriampark.com/ld.htm
-// They have also Source code in C++, Java & VB
-
-int levenshtein_strcmp(const char * s, const char * t)
-{
-    int n = (s) ? strlen(s)+1 : 0;
-    int m = (t) ? strlen(t)+1 : 0;
-
-    // Nothing to compute really..
-    if (n==0)
-    {
-        return m;
-    }
-    if (m==0)
-    {
-        return n;
-    }
-
-    // String matrix
-    int d[n][m];
-    int i,j;
-
-    // Init first row|column to 0...n|m
-    for (i=0; i<n; i++) d[i][0] = i;
-    for (j=0; j<m; j++) d[0][j] = j;
-
-    for (i=1; i<n; i++)
-    {
-        // Current char in string s
-        char cats = s[i-1];
-
-        for (j=1; j<m; j++)
-        {
-            // Do -1 only once
-            int jm1 = j-1,
-                im1 = i-1;
-
-            // a = above cell, b = left cell, c = left above celli
-            int a = d[im1][j] + 1,
-                b = d[i][jm1] + 1,
-                c = d[im1][jm1] + (t[jm1] != cats);
-
-            // Now compute the minimum of a,b,c and set MIN(a,b,c) to cell d[i][j]
-            if (a < b)
-            {
-                if (a < c)
-                {
-                    d[i][j]=a;
-                }
-                else
-                {
-                    d[i][j]=c;
-                }
-            }
-            else
-            {
-                if (b < c)
-                {
-                    d[i][j]=b;
-                }
-                else
-                {
-                    d[i][j]=c;
-                }
-            }
-        }
-    }
-
-    // The result is stored in the very right down cell
-    return d[n-1][m-1];
-}
 
 /* ------------------------------------------------------------- */
 
@@ -214,64 +135,6 @@ static char * remove_surrender(const char * name)
     return ret;
 }
 
-/* ------------------------------------------------------------- */
-
-static char * prepare_string(const char * in)
-{
-    char * result = NULL;
-    if(in)
-    {
-        char * d1 = ascii_strdown(in,-1);
-        if(d1)
-        {
-            char * c1 = curl_easy_escape(NULL,d1,0);
-            if(c1)
-            {
-                result = remove_surrender(c1);
-                free(c1);
-            }
-            free(d1);
-        }
-    }
-    return result;
-}
-
-/* ------------------------------------------------------------- */
-
-// Prepares the url for you to get downloaded. You don't have to call this.
-char * prepare_url(const char *URL, const char *artist, const char *album, const char *title)
-{
-    char * url = NULL;
-    char * old = NULL;
-    if(URL)
-    {
-        char * p_artist = prepare_string(artist);
-        if(p_artist)
-        {
-            url = strreplace(URL,"%artist%",p_artist);
-            char * p_album  = prepare_string(album);
-            if(p_album)
-            {
-                old = url;
-                url = strreplace(old,"%album%",p_album);
-                free(old);
-
-                char * p_title  = prepare_string(title);
-                if(p_title)
-                {
-                    old = url;
-                    url = strreplace(old,"%title%",p_title);
-                    free(old);
-
-                    free(p_title);
-                }
-                free(p_album);
-            }
-            free(p_artist);
-        }
-    }
-    return url;
-}
 
 
 /* ------------------------------------------------------------- */

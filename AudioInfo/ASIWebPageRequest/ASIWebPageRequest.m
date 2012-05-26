@@ -217,7 +217,7 @@ static NSMutableArray *requestsUsingXMLParser = nil;
 
 	// Only allow parsing of a single document at a time
 	[xmlParsingLock lock];
-
+ 
 	if (![requestsUsingXMLParser count]) {
 		xmlInitParser();
 	}
