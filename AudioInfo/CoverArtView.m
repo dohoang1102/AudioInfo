@@ -30,11 +30,20 @@
         imageView_ = [[UIImageView  alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height)];
         [self addSubview:imageView_];
         [imageView_ release];
-       
+        
+        defaultImage_ = [UIImage imageNamed:@"no_image.gif"];
     }
     return self;
 }
 
+
+
+//Set the image for imageView
+-(void) setCoverArtImage:(UIImage*)image {
+    imageView_.image = image;    
+}
+
+//Fetch covert art from amazon
 - (void) getCoverArtForArtist:(NSString*)artist album:(NSString*)album {
     NSString* baseurl = @"http://ecs.amazonaws.com/onca/xml?";
     
@@ -56,13 +65,13 @@
                                                                                 URLEncodedKeywords, Operation,
                                                                                 ResponseGroup, SearchIndex,
                                                                                 Service, URLEncodedTimestamp, Version];
-    NSLog(@"%@", CanonicalizedQueryString);
+    //NSLog(@"%@", CanonicalizedQueryString);
     
     NSString* stringToSign = [NSString stringWithFormat:@"GET\necs.amazonaws.com\n/onca/xml\n%@", CanonicalizedQueryString];
-    NSLog(@"%@", stringToSign);
+    //NSLog(@"%@", stringToSign);
     
     NSString* signedString = [self hmacForString:stringToSign];
-    NSLog(@"%@", signedString);
+    //NSLog(@"%@", signedString);
     NSString* URLEncodedSignedString = [NSString stringWithFormat:@"Signature=%@", [self urlencode:signedString]];
     
     NSString* urlRequest = [NSString stringWithFormat:@"%@%@&%@", baseurl, CanonicalizedQueryString, URLEncodedSignedString];
@@ -91,11 +100,11 @@
 //RFC 3986
 //http://tools.ietf.org/html/rfc3986
 -(NSString *) urlencode: (NSString *) url {
-    NSArray *escapeChars = [NSArray arrayWithObjects:@";" , @"/" , @"?" , @":" ,
+    NSArray *escapeChars = [NSArray arrayWithObjects:@"`", @";" , @"/" , @"?" , @":" ,
 							@"@", @"&", @"=", @"+",	@"$" , @"," , @"[" , @"]",
 							@"#", @"!", @"'", @"(", @")", @"*", @" ", nil];
 	
-    NSArray *replaceChars = [NSArray arrayWithObjects:@"%3B" , @"%2F" , @"%3F" ,
+    NSArray *replaceChars = [NSArray arrayWithObjects:@"", @"%3B" , @"%2F" , @"%3F" ,
 							 @"%3A", @"%40", @"%26", @"%3D" , @"%2B" , @"%24" ,
 							 @"%2C", @"%5B", @"%5D", @"%23", @"%21", @"%27",
 							 @"%28", @"%29", @"%2A", @"%20", nil];
@@ -142,16 +151,43 @@
     if ([request tag] == REQUEST_XML){
         TBXML * tbxml = [[TBXML tbxmlWithXMLData:[request responseData]] retain];
         TBXMLElement * root= tbxml.rootXMLElement;
+
+        //Check validity Case 1
+        TBXMLElement* firstChild = root->firstChild;
+        if( [[TBXML elementName:firstChild] isEqualToString:@"Error"]){
+            NSLog(@"ERROR: Amazon XML contains error. Probably signature is not correct");
+            return;
+        }
+        
+        //Check validity Case 2
         TBXMLElement* l1 = [TBXML childElementNamed:@"Items" parentElement:root];
-        TBXMLElement* l2 = [TBXML childElementNamed:@"Item" parentElement:l1];
-        TBXMLElement* l3 = [TBXML childElementNamed:@"LargeImage" parentElement:l2];
-        TBXMLElement* l4 = [TBXML childElementNamed:@"URL" parentElement:l3];
-        NSString* imageURL = [TBXML textForElement:l4];
+        TBXMLElement* l2 = [TBXML childElementNamed:@"Request" parentElement:l1];
+        TBXMLElement* element = [TBXML childElementNamed:@"IsValid" parentElement:l2];
+        
+        while ((element = element->nextSibling)) {
+            //Return if error was found
+            NSLog(@"Cur Element: %@", [TBXML elementName:element]);
+            if ([[TBXML elementName:element] isEqualToString:@"Errors"]) {
+                NSLog(@"ERROR: Amazon XML contains an error.");
+                imageView_.image = defaultImage_;
+                return;
+            }
+            
+        }
+                
+        TBXMLElement* l3 = [TBXML childElementNamed:@"Item" parentElement:l1];
+        TBXMLElement* l4 = [TBXML childElementNamed:@"LargeImage" parentElement:l3];
+        TBXMLElement* l5 = [TBXML childElementNamed:@"URL" parentElement:l4];
+        NSString* imageURL = [TBXML textForElement:l5];
         NSLog(@"%@", imageURL);
+        [tbxml release];
+        
+        
         ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:[NSURL URLWithString:imageURL]];
         [request setTag:REQUEST_COVER];
         [request setDelegate:self];
         [request startAsynchronous];
+        
             
     } else if ([request tag] == REQUEST_COVER) {
         imageView_.image = [[UIImage alloc] initWithData:[request responseData]];
@@ -164,6 +200,54 @@
 - (void)requestFailed:(ASIHTTPRequest *)request {
     NSError *error = [request error];
     NSLog(@"ASI Error");
+    imageView_.image = defaultImage_;
 }
+
+
+
+
+
+//- (void)loadUnknownXML {
+//    // Load and parse the books.xml file
+//    tbxml = [[TBXML tbxmlWithXMLFile:@"books.xml"] retain];
+//    
+//    // If TBXML found a root node, process element and iterate all children
+//    if (tbxml.rootXMLElement)
+//        [self traverseElement:tbxml.rootXMLElement];
+//    
+//    // release resources
+//    [tbxml release];
+//}
+//
+//- (void) traverseElement:(TBXMLElement *)element {
+//    
+//    do {
+//        // Display the name of the element
+//        NSLog(@"%@",[TBXML elementName:element]);
+//        
+//        // Obtain first attribute from element
+//        TBXMLAttribute * attribute = element->firstAttribute;
+//        
+//        // if attribute is valid
+//        while (attribute) {
+//            // Display name and value of attribute to the log window
+//            NSLog(@"%@->%@ = %@",
+//                  [TBXML elementName:element],
+//                  [TBXML attributeName:attribute],
+//                  [TBXML attributeValue:attribute]);
+//            
+//            // Obtain the next attribute
+//            attribute = attribute->next;
+//        }
+//        
+//        // if the element has child elements, process them
+//        if (element->firstChild) 
+//            [self traverseElement:element->firstChild];
+//        
+//        // Obtain next sibling element
+//    } while ((element = element->nextSibling));  
+//}
+//
+
 
 @end

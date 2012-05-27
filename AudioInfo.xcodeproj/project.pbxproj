@@ -12,6 +12,7 @@
 		150E57C51570343C00ED9C34 /* GTMBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 150E57C41570343C00ED9C34 /* GTMBase64.m */; };
 		150E57CE15703F4000ED9C34 /* NSDataAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 150E57CB15703F4000ED9C34 /* NSDataAdditions.m */; };
 		150E57CF15703F4000ED9C34 /* TBXML.m in Sources */ = {isa = PBXBuildFile; fileRef = 150E57CD15703F4000ED9C34 /* TBXML.m */; };
+		153ECF2D15717EFC00751F1D /* no_image.gif in Resources */ = {isa = PBXBuildFile; fileRef = 153ECF2C15717EFC00751F1D /* no_image.gif */; };
 		157264AE156D90EE0012A1D6 /* ASIAuthenticationDialog.m in Sources */ = {isa = PBXBuildFile; fileRef = 1572649B156D90EE0012A1D6 /* ASIAuthenticationDialog.m */; };
 		157264AF156D90EE0012A1D6 /* ASIDataCompressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 1572649E156D90EE0012A1D6 /* ASIDataCompressor.m */; };
 		157264B0156D90EE0012A1D6 /* ASIDataDecompressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 157264A0156D90EE0012A1D6 /* ASIDataDecompressor.m */; };
@@ -58,6 +59,7 @@
 		150E57CB15703F4000ED9C34 /* NSDataAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSDataAdditions.m; sourceTree = "<group>"; };
 		150E57CC15703F4000ED9C34 /* TBXML.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TBXML.h; sourceTree = "<group>"; };
 		150E57CD15703F4000ED9C34 /* TBXML.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TBXML.m; sourceTree = "<group>"; };
+		153ECF2C15717EFC00751F1D /* no_image.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = no_image.gif; sourceTree = "<group>"; };
 		1572649A156D90EE0012A1D6 /* ASIAuthenticationDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASIAuthenticationDialog.h; sourceTree = "<group>"; };
 		1572649B156D90EE0012A1D6 /* ASIAuthenticationDialog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ASIAuthenticationDialog.m; sourceTree = "<group>"; };
 		1572649C156D90EE0012A1D6 /* ASICacheDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASICacheDelegate.h; sourceTree = "<group>"; };
@@ -149,6 +151,22 @@
 				150E57CD15703F4000ED9C34 /* TBXML.m */,
 			);
 			path = TBXML;
+			sourceTree = "<group>";
+		};
+		153ECF2915717EE400751F1D /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				153ECF2B15717EF000751F1D /* Images */,
+			);
+			name = Assets;
+			sourceTree = "<group>";
+		};
+		153ECF2B15717EF000751F1D /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				153ECF2C15717EFC00751F1D /* no_image.gif */,
+			);
+			name = Images;
 			sourceTree = "<group>";
 		};
 		15726491156D8F330012A1D6 /* Shared */ = {
@@ -291,6 +309,7 @@
 				150E57B115700C5600ED9C34 /* LyricsView.m */,
 				150E57B415701A7700ED9C34 /* CoverArtView.h */,
 				150E57B515701A7800ED9C34 /* CoverArtView.m */,
+				153ECF2915717EE400751F1D /* Assets */,
 				15726491156D8F330012A1D6 /* Shared */,
 			);
 			path = AudioInfo;
@@ -361,6 +380,7 @@
 				15854EDE155B855400CCC720 /* InfoPlist.strings in Resources */,
 				157264D1156D95CE0012A1D6 /* ASIWebPageRequest in Resources */,
 				157264E0156D96C20012A1D6 /* README-GHUnit in Resources */,
+				153ECF2D15717EFC00751F1D /* no_image.gif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -468,7 +488,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "AudioInfo/AudioInfo-Prefix.pch";
 				INFOPLIST_FILE = "AudioInfo/AudioInfo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
@@ -493,7 +513,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "AudioInfo/AudioInfo-Prefix.pch";
 				INFOPLIST_FILE = "AudioInfo/AudioInfo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",

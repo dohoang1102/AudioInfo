@@ -11,7 +11,9 @@
 
 @interface CoverArtView : UIView <ASIHTTPRequestDelegate> {
     UIImageView* imageView_;
+    UIImage* defaultImage_;
 
 }
 - (void) getCoverArtForArtist:(NSString*)artist album:(NSString*)album;
+- (void) setCoverArtImage:(UIImage*)image;
 @end

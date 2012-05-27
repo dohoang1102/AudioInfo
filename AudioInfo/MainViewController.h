@@ -26,8 +26,11 @@
     UILabel* waveFormLabel;
     UILabel* coverArtLabel_;
     UIImageView* coverArtView_;
+    UILabel* lyricsLabel_;
     LyricsView* lyricsView_;
     CoverArtView* amazonCovertArt_;
+    
+    
     
     UIImageView* waveform_;
     UIActivityIndicatorView* waveformSpinner_;

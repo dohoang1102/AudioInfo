@@ -5,6 +5,7 @@
 //  Created by Rinat Abdrashitov on 12-05-10.
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
+
 #import "TFHpple.h"
 
 #import "MainViewController.h"
@@ -25,7 +26,16 @@
     self = [super init];
     if (self) {
         // Custom initialization
-        self.view.backgroundColor = [UIColor grayColor];
+        self.view.backgroundColor = [UIColor whiteColor];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(lyricsReceived) 
+                                                     name:@"LyricsReceived"
+                                                   object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(lyricsFailed) 
+                                                     name:@"LyricsFailed"
+                                                   object:nil];
     }
     return self;
 }
@@ -38,14 +48,9 @@
     // Release any cached data, images, etc that aren't in use.
 }
 
-#pragma mark - View lifecycle
 
-/*
-// Implement loadView to create a view hierarchy programmatically, without using a nib.
-- (void)loadView
-{
-}
-*/
+
+#pragma mark - View lifecycle
 
 -(CGFloat) getBottomY: (UIView*) view {
     return view.frame.origin.y + view.frame.size.height;
@@ -53,8 +58,8 @@
 
 
 // Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
-- (void)viewDidLoad
-{
+- (void)viewDidLoad {
+    
     [super viewDidLoad];
     
     mainScrollView_ = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
@@ -104,11 +109,11 @@
     [mainScrollView_ addSubview:sampleRate_];
     [sampleRate_ release];
     
-    coverArtView_ = [[UIImageView alloc] initWithFrame:CGRectMake(5, [self getBottomY: sampleRate_] + 10, 100, 100)];
-    [mainScrollView_ addSubview:coverArtView_];
-    [coverArtView_ release];
-    
-    waveFormLabel = [[UILabel alloc] initWithFrame:CGRectMake(320/2 - 100/2, [self getBottomY:coverArtView_] + 10, 100, 30)];
+    amazonCovertArt_ = [[CoverArtView alloc] initWithFrame:CGRectMake(320/2-250/2, [self getBottomY: sampleRate_] + 10, 250, 250)];
+    [mainScrollView_ addSubview:amazonCovertArt_];
+    [amazonCovertArt_ release];
+      
+    waveFormLabel = [[UILabel alloc] initWithFrame:CGRectMake(320/2 - 100/2, [self getBottomY:amazonCovertArt_] + 10, 100, 30)];
     waveFormLabel.backgroundColor = [UIColor clearColor];
     waveFormLabel.text = @"Wave form";
     waveFormLabel.hidden = YES;
@@ -124,22 +129,34 @@
     [waveformScrollView_ addSubview:waveform_];
     [waveform_ release];    
     
-    waveformSpinner_ = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    waveformSpinner_ = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
     waveformSpinner_.frame = CGRectMake(320/2 - 15, waveformScrollView_.frame.origin.y + waveformScrollView_.frame.size.height/2 - 15, 30, 30);
     [mainScrollView_ addSubview:waveformSpinner_];
     [waveformSpinner_ release];
-        
-    lyricsView_ = [[LyricsView alloc] initWithFrame:CGRectMake(5, [self getBottomY:waveformScrollView_] + 10, 310, 10)];
+    
+    lyricsLabel_ = [[UILabel alloc] initWithFrame:CGRectMake(320/2 - 50/2, [self getBottomY:waveformScrollView_] + 10, 50, 30)];
+    lyricsLabel_.backgroundColor = [UIColor clearColor];
+    lyricsLabel_.text = @"Lyrics";
+    lyricsLabel_.hidden = YES;
+    [mainScrollView_ addSubview:lyricsLabel_];
+    [lyricsLabel_ release];
+
+    lyricsView_ = [[LyricsView alloc] initWithFrame:CGRectMake(5, [self getBottomY:lyricsLabel_] + 10, 310, 0)];
     [mainScrollView_ addSubview:lyricsView_];
     [lyricsView_ release];
         
     mainScrollView_.contentSize = CGSizeMake(320, [self getBottomY:lyricsView_] + 50);
-    
-    amazonCovertArt_ = [[CoverArtView alloc] initWithFrame:CGRectMake(5, [self getBottomY: sampleRate_] + 10, 100, 100)];
-    [amazonCovertArt_ getCoverArtForArtist:@"beyonce" album:@"4"];
-    [mainScrollView_ addSubview:amazonCovertArt_];
-    [amazonCovertArt_ release];
+        
+}
 
+//Called upon receiving LyricsReceived notification
+-(void)lyricsReceived{
+    mainScrollView_.contentSize = CGSizeMake(320, [self getBottomY:lyricsView_] + 50);
+    lyricsLabel_.hidden = NO;    
+}
+-(void)lyricsFailed {
+    mainScrollView_.contentSize = CGSizeMake(320, [self getBottomY:lyricsView_] + 50);
+    lyricsLabel_.hidden = NO;
     
 }
 
@@ -150,35 +167,32 @@
     // e.g. self.myOutlet = nil;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     // Return YES for supported orientations
 	if (UIInterfaceOrientationIsLandscape(interfaceOrientation)) {
         return NO;
     }
-    
     if (interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown) {
         return NO;
     }
     return YES;
 }
 
-
+/*
+ Selector for Choose Cong Button
+ */
 -(void) chooseSongClicked {
-//    MPMediaPickerController* picker = [[MPMediaPickerController alloc] initWithMediaTypes:MPMediaTypeMusic];
-//    picker.prompt = @"Choose song to process";
-//    picker.delegate = self;
-//    [self presentModalViewController:picker animated:YES];
-//    [picker release];
-    
-    //Get lyrics. Will update the lyricsView automatically.
-    [lyricsView_ getLyricsForArtist:@"jay-z kanye west" song:@"gotta have it"];
-     mainScrollView_.contentSize = CGSizeMake(320, [self getBottomY:lyricsView_] + 50);
+    MPMediaPickerController* picker = [[MPMediaPickerController alloc] initWithMediaTypes:MPMediaTypeMusic];
+    picker.prompt = @"Choose song to process";
+    picker.delegate = self;
+    [self presentModalViewController:picker animated:YES];
+    [picker release];
 }
 
 #pragma mark - MPMediaPickerControllerDelegate Methods
 
 - (void)mediaPicker:(MPMediaPickerController *)mediaPicker didPickMediaItems:(MPMediaItemCollection *)mediaItemCollection {
+
     [self dismissModalViewControllerAnimated:YES];
 	if ([mediaItemCollection count] < 1) {
 		return;
@@ -192,35 +206,20 @@
     genre_.text = [NSString stringWithFormat:@"Genre: %@", [song valueForProperty:MPMediaItemPropertyGenre]];
     duration_.text = [NSString stringWithFormat:@"Duration: %@ %@", [song valueForProperty:MPMediaItemPropertyPlaybackDuration], @"ms"];
     waveFormLabel.hidden = NO;
-    
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyTitle]);                // filterable
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyAlbumTitle]);              // filterable
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyArtist]);                  // filterable
-//    
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyAlbumArtist]);             // filterable
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyGenre]);                   // filterable
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyComposer]);                // filterable
-//    
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyPlaybackDuration]);
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyAlbumTrackNumber]);
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyAlbumTrackCount]);
-//    
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyDiscNumber]);
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyDiscCount]);
-//    NSLog(@"%@", [song valueForProperty:MPMediaItemPropertyLyrics]);
-//    
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyReleaseDate]);
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyBeatsPerMinute]);
-//    NSLog(@"%@", [song valueForProperty: MPMediaItemPropertyComments]);
+        
+    UIImage* nativeimage = [[song valueForProperty:MPMediaItemPropertyArtwork] imageWithSize:  amazonCovertArt_.bounds.size];
+    if (nativeimage == nil) {
+        NSLog(@"Getting Cover for %@ %@", artistTitle_.text, albumTitle_.text);
+        [amazonCovertArt_ getCoverArtForArtist:[song valueForProperty:MPMediaItemPropertyArtist] album:[song valueForProperty:MPMediaItemPropertyAlbumTitle]];
+    } else {
+        [amazonCovertArt_ setCoverArtImage:nativeimage];
+    }
 
+       
     // Create wave form
     waveform_.image = nil;
     NSURL *assetURL = [song valueForProperty:MPMediaItemPropertyAssetURL];
     AVURLAsset *songAsset = [AVURLAsset URLAssetWithURL:assetURL options:nil];
-    
-    NSError * error = nil;
-    
-    AVAssetReader * reader = [[AVAssetReader alloc] initWithAsset:songAsset error:&error];
     AVAssetTrack * songTrack = [songAsset.tracks objectAtIndex:0];
     UInt32 sampleRate,channelCount;
     
@@ -229,30 +228,27 @@
         CMAudioFormatDescriptionRef item = (CMAudioFormatDescriptionRef)[formatDesc objectAtIndex:i];
         const AudioStreamBasicDescription* fmtDesc = CMAudioFormatDescriptionGetStreamBasicDescription (item);
         if(fmtDesc ) {
-            
             sampleRate = fmtDesc->mSampleRate;
             channelCount = fmtDesc->mChannelsPerFrame;
-            
             // NSLog(@"channels:%u, bytes/packet: %u, sampleRate %f",fmtDesc->mChannelsPerFrame, fmtDesc->mBytesPerPacket,fmtDesc->mSampleRate);
         }
     }
+    
     numberOfChannels_.text = [NSString stringWithFormat:@"Number of Channels: %i", channelCount];
     sampleRate_.text = [NSString stringWithFormat:@"Sampling Rate: %i Hz", sampleRate];
     
-  
-//    [waveformSpinner_ startAnimating];
-//    [self performSelectorInBackground:@selector(createWaveForm:) withObject:songAsset];
+    [waveformSpinner_ startAnimating];
+    [self performSelectorInBackground:@selector(createWaveForm:) withObject:songAsset];
 
        
-  //  NSURL* url = [[NSURL alloc] initWithString:@"music.mp3"];
-   // AVAudioPlayer* ; = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:nil];
-//[avplayer prepareToPlay];
+    //Get lyrics. Will update the lyricsView automatically.
     
-   // NSDictionary* dictionary = avplayer.settings;
-  //  NSLog(@"%@", dictionary);
-    coverArtView_.image = [[song valueForProperty:MPMediaItemPropertyArtwork] imageWithSize: coverArtView_.bounds.size];
+    [lyricsView_ getLyricsForArtist:[song valueForProperty:MPMediaItemPropertyArtist] song:[song valueForProperty:MPMediaItemPropertyTitle]];
+//    [lyricsView_ getLyricsForArtist:@"jay-z kanye west" song:@"gotta have it"];
+    
+    
+    
 }
-
 
 
 - (void) mediaPickerDidCancel:(MPMediaPickerController *)mediaPicker{
@@ -272,8 +268,6 @@
     NSError *error = [request error];
     NSLog(@"ASI Error");
 }
-
-
 
 #pragma mark - Draw Waveform Methods
 
@@ -519,7 +513,11 @@
     return newImage;
 }
 
+-(void)dealloc{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [super dealloc]; 
 
+}
 
 
 
