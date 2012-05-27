@@ -355,7 +355,7 @@
     genre_.text = [NSString stringWithFormat:@"Genre: %@", [song valueForProperty:MPMediaItemPropertyGenre]];
     duration_.text = [NSString stringWithFormat:@"Duration: %@ %@", [song valueForProperty:MPMediaItemPropertyPlaybackDuration], @"ms"];
     numberOfChannels_.text = @"Number Of Channels: Loading...";
-    sampleRate_.text = @"Samplong Rate: Loading...";
+    sampleRate_.text = @"Sampling Rate: Loading...";
     waveFormLabel.hidden = NO;
     audioPLayerLabel_.hidden = NO;
         
@@ -568,8 +568,8 @@
         NSLog(@"%@", [avplayer_.settings valueForKey:AVFormatIDKey]);
         
         
-        numberOfChannels_.text = [NSString stringWithFormat:@"Number Of Channels: %@ Hz", [avplayer_.settings valueForKey:AVNumberOfChannelsKey]];
-        sampleRate_.text = [NSString stringWithFormat:@"Sampling Rate: %@" , [avplayer_.settings valueForKey:AVSampleRateKey]];
+        numberOfChannels_.text = [NSString stringWithFormat:@"Number Of Channels: %@", [avplayer_.settings valueForKey:AVNumberOfChannelsKey]];
+        sampleRate_.text = [NSString stringWithFormat:@"Sampling Rate: %@ Hz" , [avplayer_.settings valueForKey:AVSampleRateKey]];
         NSLog(@"%@", [avplayer_.settings valueForKey:AVLinearPCMBitDepthKey]);
         NSLog(@"%@", [avplayer_.settings valueForKey:AVLinearPCMIsBigEndianKey]);
         
