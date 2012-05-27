@@ -63,7 +63,7 @@
     artist = [artist stringByReplacingOccurrencesOfString:@" " withString:@"-"];
     song = [song stringByReplacingOccurrencesOfString:@" " withString:@"-"];
     NSString* urlstring = [NSString stringWithFormat:@"http://www.songlyrics.com/%@/%@-lyrics/", artist, song]; 
-    NSLog(@"Lyrics URL:%@", urlstring);
+    //NSLog(@"Lyrics URL:%@", urlstring);
     NSURL *url = [NSURL URLWithString:urlstring];
     
     //Send http request to fethc lyrics
@@ -94,7 +94,7 @@
         scanner = [NSScanner scannerWithString:lyrics];
         [scanner scanUpToString:@"&#" intoString:nil];
         [scanner scanUpToString:@"</p>" intoString:&lyrics2];
-        NSLog(@"%@", lyrics2);
+        //NSLog(@"%@", lyrics2);
   
         lyrics2 = [lyrics2 stringByReplacingOccurrencesOfString:@"<br />" withString:@""];
         lyrics2 = [lyrics2 stringByReplacingOccurrencesOfString:@"&#" withString:@""];
@@ -113,7 +113,7 @@
             [FINAL_LYRICS appendFormat:@"%@\n", actual_sentence]; 
             [actual_sentence release];
         }
-        NSLog(@"%@", FINAL_LYRICS);
+        //NSLog(@"%@", FINAL_LYRICS);
         lyricsView_.text = FINAL_LYRICS;
         CGRect frame = lyricsView_.frame;
         frame.size.height = lyricsView_.contentSize.height;

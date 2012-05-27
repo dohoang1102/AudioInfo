@@ -185,8 +185,15 @@
         
         ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:[NSURL URLWithString:imageURL]];
         [request setTag:REQUEST_COVER];
-        [request setDelegate:self];
-        [request startAsynchronous];
+        //[request setDelegate:self];
+        //[request startSynchronous];
+        //ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
+        [request startSynchronous];
+        NSError *error = [request error];
+        if (!error) {
+            //NSString *response = [request responseString];
+            imageView_.image = [[UIImage alloc] initWithData:[request responseData]];
+        }
         
             
     } else if ([request tag] == REQUEST_COVER) {
