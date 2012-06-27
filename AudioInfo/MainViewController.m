@@ -23,6 +23,7 @@
 -(void) createWaveForm:(AVURLAsset*) songAsset;
 -(void) showAudioPlayer;
 -(void) convertToCAF:(AVURLAsset*) songAsset;
+-(void) readSamplesTest:(AVURLAsset *)songAsset;
 @end
 
 
@@ -34,16 +35,8 @@
         // Custom initialization
         self.view.backgroundColor = [UIColor whiteColor];
         [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateLevel) userInfo:nil repeats:YES];
-
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(lyricsReceived) 
-                                                     name:@"LyricsReceived"
-                                                   object:nil];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(lyricsFailed) 
-                                                     name:@"LyricsFailed"
-                                                   object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(lyricsReceived) name:@"LyricsReceived" object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(lyricsFailed) name:@"LyricsFailed" object:nil];
     }
     return self;
 }
@@ -255,8 +248,9 @@
         [avplayer_ updateMeters];
         
         float power = [avplayer_ averagePowerForChannel:0];
-        power = 100 + power;
-        audioLevel_.progress = power/100;
+        
+        power = power+160;
+        audioLevel_.progress = 0.5*(power/160);
         //power = -1*power;
         
     //    NSLog(@"%f", [avplayer_ averagePowerForChannel:0]);
@@ -538,6 +532,7 @@
     
     
 }
+
 -(void) showAudioPlayer{
     if (avplayer_ !=nil) {
         [avplayer_ release];
@@ -580,16 +575,82 @@
 }
 
 -(void) createWaveForm:(AVURLAsset*) songAsset {
-    
-       
+        
+    //[self readSamplesTest:songAsset];
     
     NSData* imageData = [self renderPNGAudioPictogramForAssett:songAsset];
     UIImage* wave = [UIImage imageWithData:imageData];
     waveform_.frame =  CGRectMake(0, 0, 310, 200);
     waveform_.image = wave;
-    
     waveformScrollView_.contentSize = CGSizeMake(310, 200);
     [waveformSpinner_ stopAnimating];
+}
+
+
+- (void) readSamplesTest:(AVURLAsset*)songAsset {
+    NSError * error = nil;
+    
+    AVAssetReader * reader = [[AVAssetReader alloc] initWithAsset:songAsset error:&error];
+    AVAssetTrack * songTrack = [songAsset.tracks objectAtIndex:0];
+    
+    NSDictionary* outputSettingsDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                        [NSNumber numberWithInt:kAudioFormatLinearPCM],AVFormatIDKey,
+                                        //     [NSNumber numberWithInt:44100.0],AVSampleRateKey, /*Not Supported*/
+                                        //     [NSNumber numberWithInt: 2],AVNumberOfChannelsKey,    /*Not Supported*/
+                                        [NSNumber numberWithInt:16],  AVLinearPCMBitDepthKey,
+                                        [NSNumber numberWithBool:NO], AVLinearPCMIsBigEndianKey,
+                                        [NSNumber numberWithBool:NO], AVLinearPCMIsFloatKey,
+                                        [NSNumber numberWithBool:NO], AVLinearPCMIsNonInterleaved,
+                                        nil];
+        
+    AVAssetReaderTrackOutput* output = [[AVAssetReaderTrackOutput alloc] initWithTrack:songTrack outputSettings:outputSettingsDict];
+    [reader addOutput:output];
+    [output release];
+    
+    UInt32 sampleRate,channelCount;
+    NSArray* formatDesc = songTrack.formatDescriptions;
+    for(unsigned int i = 0; i < [formatDesc count]; ++i) {
+        CMAudioFormatDescriptionRef item = (CMAudioFormatDescriptionRef)[formatDesc objectAtIndex:i];
+        const AudioStreamBasicDescription* fmtDesc = CMAudioFormatDescriptionGetStreamBasicDescription (item);
+        if (fmtDesc) {
+            sampleRate = fmtDesc->mSampleRate;
+            channelCount = fmtDesc->mChannelsPerFrame;
+        }
+    }
+    [reader startReading];
+    
+    while (reader.status == AVAssetReaderStatusReading){
+        AVAssetReaderTrackOutput * trackOutput = (AVAssetReaderTrackOutput *)[reader.outputs objectAtIndex:0];
+        CMSampleBufferRef sampleBufferRef = [trackOutput copyNextSampleBuffer];
+        
+        if (sampleBufferRef){
+            CMBlockBufferRef blockBufferRef = CMSampleBufferGetDataBuffer(sampleBufferRef);
+            CMItemCount numSamplesInBuffer = CMSampleBufferGetNumSamples(sampleBufferRef);
+            AudioBufferList audioBufferList;
+            CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBufferRef,
+                                                                    NULL,
+                                                                    &audioBufferList,
+                                                                    sizeof(audioBufferList),
+                                                                    NULL,
+                                                                    NULL,
+                                                                    kCMSampleBufferFlag_AudioBufferList_Assure16ByteAlignment,
+                                                                    &blockBufferRef);
+            
+            for (int bufferCount=0; bufferCount < audioBufferList.mNumberBuffers; bufferCount++) {
+                SInt16* samples = (SInt16 *)audioBufferList.mBuffers[bufferCount].mData;
+                for (int i=0; i < numSamplesInBuffer; i++) {
+                    // amplitude for the sample is samples[i], assuming you have linear pcm to start with
+                    NSLog(@"Int: %i", samples[i]);
+                    float sampleFloat = (float)samples[i] / 32767.0;
+                    NSLog(@"Float: %f", sampleFloat);
+                }
+            }
+            // Release the buffer when done with the samples 
+            // (retained by CMSampleBufferGetAudioBufferListWithRetainedblockBuffer)
+            CMSampleBufferInvalidate(sampleBufferRef);
+            CFRelease(sampleBufferRef); 
+        } 
+    }
 }
 
 - (NSData *) renderPNGAudioPictogramForAssett:(AVURLAsset *)songAsset {
@@ -624,7 +685,7 @@
     
     NSArray* formatDesc = songTrack.formatDescriptions;
     for(unsigned int i = 0; i < [formatDesc count]; ++i) {
-    CMAudioFormatDescriptionRef item = (CMAudioFormatDescriptionRef)[formatDesc objectAtIndex:i];
+        CMAudioFormatDescriptionRef item = (CMAudioFormatDescriptionRef)[formatDesc objectAtIndex:i];
         const AudioStreamBasicDescription* fmtDesc = CMAudioFormatDescriptionGetStreamBasicDescription (item);
         if(fmtDesc ) {
             
@@ -649,9 +710,9 @@
     SInt64 totalLeft = 0;
     SInt64 totalRight = 0;
     NSInteger sampleTally = 0;
+    NSInteger maxTally =-1*INFINITY;
     
     NSInteger samplesPerPixel = sampleRate / 50;
-    
     
     while (reader.status == AVAssetReaderStatusReading){
         
@@ -664,71 +725,57 @@
             size_t length = CMBlockBufferGetDataLength(blockBufferRef);
             totalBytes += length;
             
-            
             NSAutoreleasePool *wader = [[NSAutoreleasePool alloc] init];
-            
+              
             NSMutableData * data = [NSMutableData dataWithLength:length];
             CMBlockBufferCopyDataBytes(blockBufferRef, 0, length, data.mutableBytes);
-            
             
             SInt16 * samples = (SInt16 *) data.mutableBytes;
             int sampleCount = length / bytesPerSample;
             for (int i = 0; i < sampleCount ; i ++) {
                 
                 SInt16 left = *samples++;
-                
-                totalLeft  += left;
-                
-                
+                totalLeft  += left;          
                 
                 SInt16 right;
                 if (channelCount==2) {
                     right = *samples++;
-                    
                     totalRight += right;
                 }
                 
                 sampleTally++;
-                
+                if (left>maxTally) maxTally = left;
+                                
                 if (sampleTally > samplesPerPixel) {
                     
-                    left  = totalLeft / sampleTally; 
+                    //left  = totalLeft / sampleTally; 
+                    left = maxTally;
                     
                     SInt16 fix = abs(left);
                     if (fix > normalizeMax) {
                         normalizeMax = fix;
                     }
                     
-                    
                     [fullSongData appendBytes:&left length:sizeof(left)];
                     
                     if (channelCount==2) {
                         right = totalRight / sampleTally; 
-                        
-                        
+                                           
                         SInt16 fix = abs(right);
-                        if (fix > normalizeMax) {
-                            normalizeMax = fix;
-                        }
-                        
-                        
+                        if (fix > normalizeMax) normalizeMax = fix;
+                                          
                         [fullSongData appendBytes:&right length:sizeof(right)];
                     }
                     
                     totalLeft   = 0;
                     totalRight  = 0;
                     sampleTally = 0;
-                    
+                    maxTally = -1*INFINITY;
                 }
             }
-            
-            
-            
             [wader drain];
-            
-            
+                        
             CMSampleBufferInvalidate(sampleBufferRef);
-            
             CFRelease(sampleBufferRef);
         }
     }
@@ -742,20 +789,7 @@
         return nil;
     }
     
-   
-    
     if (reader.status == AVAssetReaderStatusCompleted){
-  
-       // NSURL *url = [NSURL fileURLWithPath:@"exported.caf"];
-
-
-        NSError *error;
-        AVAudioPlayer* avplayer = [[AVAudioPlayer alloc] initWithData:fullSongData error:&error];
-        avplayer.delegate = self;
-        avplayer.volume = 1.0;
-        
-        [avplayer prepareToPlay];
-        [avplayer play];
         
         NSLog(@"rendering output graphics using normalizeMax %d",normalizeMax);
         
@@ -777,7 +811,6 @@
     
     return finalData;
 }
-
 -(void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError *)error
 {
     NSLog(@"Shit happened" );
@@ -807,8 +840,8 @@
     CGContextSetLineWidth(context, 1.0);
     
     float halfGraphHeight = (imageHeight / 2) / (float) channelCount ;
-    float centerLeft = halfGraphHeight*2;
-    float centerRight = (halfGraphHeight*3); 
+    float centerLeft = halfGraphHeight;
+    float centerRight = (halfGraphHeight*3) ; 
     float sampleAdjustmentFactor = (imageHeight/ (float) channelCount) / (float) normalizeMax;
     
     for (NSInteger intSample = 0 ; intSample < sampleCount ; intSample ++ ) {
@@ -820,15 +853,15 @@
         CGContextSetStrokeColorWithColor(context, leftcolor);
         CGContextStrokePath(context);
         
-//        if (channelCount==2) {
-//            SInt16 right = *samples++;
-//            float pixels = (float) right;
-//            pixels *= sampleAdjustmentFactor;
-//            CGContextMoveToPoint(context, intSample, centerRight - pixels);
-//            CGContextAddLineToPoint(context, intSample, centerRight + pixels);
-//            CGContextSetStrokeColorWithColor(context, rightcolor);
-//            CGContextStrokePath(context); 
-//        }
+        if (channelCount==2) {
+            SInt16 right = *samples++;
+            float pixels = (float) right;
+            pixels *= sampleAdjustmentFactor;
+            CGContextMoveToPoint(context, intSample, centerRight - pixels);
+            CGContextAddLineToPoint(context, intSample, centerRight + pixels);
+            CGContextSetStrokeColorWithColor(context, rightcolor);
+            CGContextStrokePath(context); 
+        }
     }
     
     // Create new image
@@ -839,7 +872,6 @@
     
     return newImage;
 }
-
 -(void)dealloc{
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super dealloc]; 
